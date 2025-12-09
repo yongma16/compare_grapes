@@ -40,7 +40,10 @@ export default class InputColor extends Input {
 
   remove() {
     super.remove();
-    this.colorEl.spectrum('destroy');
+    const {em}=this
+    // @ts-ignore 关闭
+    em?.getConfig?.()?.customColorPicker?.close()
+    // this.colorEl.spectrum('destroy');
     return this;
   }
 
@@ -55,15 +58,15 @@ export default class InputColor extends Input {
     const { model, opts } = this;
     const { onChange } = opts;
     let value = val;
-    const colorEl = this.getColorEl();
-
-    // Check the color by using the ColorPicker's parser
-    if (colorEl) {
-      colorEl.spectrum('set', value);
-      const tc = colorEl.spectrum('get');
-      const color = value && getColor(tc);
-      color && (value = color);
-    }
+    // const colorEl = this.getColorEl();
+    //
+    // // Check the color by using the ColorPicker's parser
+    // if (colorEl) {
+    //   colorEl.spectrum('set', value);
+    //   const tc = colorEl.spectrum('get');
+    //   const color = value && getColor(tc);
+    //   color && (value = color);
+    // }
 
     onChange ? onChange(value) : model.set({ value }, { fromInput: 1 });
   }
@@ -118,52 +121,78 @@ export default class InputColor extends Input {
           model.setValueFromInput(value, complete);
         }
       };
+      // 修改颜色
+      const changeByOptions= (color: any) => {
+        changed = true;
+        cpStyle.backgroundColor = color;
+        handleChange(color);
+        this.noneColor = false;
+      }
+      try{
+        const movedColor=this.movedColor
+        colorEl[0].addEventListener('click',function (e:Event){
+          console.log('model',model)
+          // @ts-ignore
+          em?.getConfig?.()?.customColorPicker?.open({
+            targetEvent:e,
+            changeByOptions:changeByOptions,
+            movedColor:movedColor,
+            color:model.getValue() || false,
+            property:model?.attributes?.property
+          })
+          // 防止冒泡
+          e.stopPropagation()
+        })
+      }
+      catch (e) {
+        console.error(e)
+      }
 
       // @ts-ignore
-      colorEl.spectrum({
-        color: model.getValue() || false,
-        containerClassName: `${ppfx}one-bg ${ppfx}two-color ${ppfx}editor-sp`,
-        maxSelectionSize: 8,
-        showPalette: true,
-        showAlpha: true,
-        chooseText: 'Ok',
-        cancelText: '⨯',
-        palette: [],
-
-        // config expanded here so that the functions below are not overridden
-        ...colorPickerConfig,
-        ...(model.get('colorPicker') || {}),
-
-        move: (color: any) => {
-          const cl = getColor(color);
-          this.movedColor = cl;
-          cpStyle.backgroundColor = cl;
-          handleChange(cl, false);
-        },
-        change: (color: any) => {
-          changed = true;
-          const cl = getColor(color);
-          cpStyle.backgroundColor = cl;
-          handleChange(cl);
-          this.noneColor = false;
-        },
-        show: (color: any) => {
-          changed = false;
-          this.movedColor = '';
-          previousColor = onChange ? model.getValue({ noDefault: true }) : getColor(color);
-        },
-        hide: () => {
-          if (!changed && (previousColor || onChange)) {
-            if (this.noneColor) {
-              previousColor = '';
-            }
-            cpStyle.backgroundColor = previousColor;
-            // @ts-ignore
-            colorEl.spectrum('set', previousColor);
-            handleChange(previousColor, false);
-          }
-        },
-      });
+      // colorEl.spectrum({
+      //   color: model.getValue() || false,
+      //   containerClassName: `${ppfx}one-bg ${ppfx}two-color ${ppfx}editor-sp`,
+      //   maxSelectionSize: 8,
+      //   showPalette: true,
+      //   showAlpha: true,
+      //   chooseText: 'Ok',
+      //   cancelText: '⨯',
+      //   palette: [],
+      //
+      //   // config expanded here so that the functions below are not overridden
+      //   ...colorPickerConfig,
+      //   ...(model.get('colorPicker') || {}),
+      //
+      //   move: (color: any) => {
+      //     const cl = getColor(color);
+      //     this.movedColor = cl;
+      //     cpStyle.backgroundColor = cl;
+      //     handleChange(cl, false);
+      //   },
+      //   change: (color: any) => {
+      //     changed = true;
+      //     const cl = getColor(color);
+      //     cpStyle.backgroundColor = cl;
+      //     handleChange(cl);
+      //     this.noneColor = false;
+      //   },
+      //   show: (color: any) => {
+      //     changed = false;
+      //     this.movedColor = '';
+      //     previousColor = onChange ? model.getValue({ noDefault: true }) : getColor(color);
+      //   },
+      //   hide: () => {
+      //     if (!changed && (previousColor || onChange)) {
+      //       if (this.noneColor) {
+      //         previousColor = '';
+      //       }
+      //       cpStyle.backgroundColor = previousColor;
+      //       // @ts-ignore
+      //       colorEl.spectrum('set', previousColor);
+      //       handleChange(previousColor, false);
+      //     }
+      //   },
+      // });
 
       if (em && em.on!) {
         this.listenTo(em, 'component:selected', () => {
@@ -171,7 +200,9 @@ export default class InputColor extends Input {
           changed = true;
           this.movedColor = '';
           // @ts-ignore
-          colorEl.spectrum('hide');
+          // colorEl.spectrum('hide');
+          // @ts-ignore 关闭
+          em?.getConfig?.()?.customColorPicker?.close()
         });
       }
 

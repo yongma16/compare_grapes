@@ -61,6 +61,13 @@ export default class InputNumber extends Input {
    * Handled when the view is changed
    */
   handleChange(e: Event) {
+    try{
+      // @ts-ignore  避免 000 0. 异常数据保存
+      e.target.value=parseFloat(e.target.value).toString()
+    }
+    catch (e){
+      console.warn(e)
+    }
     e.stopPropagation();
     this.setValue(this.getInputEl().value);
     this.elementUpdated();

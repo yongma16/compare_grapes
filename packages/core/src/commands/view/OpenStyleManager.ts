@@ -5,6 +5,48 @@ export default {
   run(editor, sender) {
     this.sender = sender;
 
+    const em = editor.getModel();
+
+    const config = editor.Config;
+    const pfx = config.stylePrefix;
+    const tm = editor.TraitManager;
+    const confTm = tm.getConfig();
+    let panelC;
+
+    if (confTm.appendTo) return;
+
+    if (!this.$cn) {
+      this.$cn = $('<div></div>');
+      this.$cn2 = $('<div></div>');
+      this.$cn.append(this.$cn2);
+      this.$header = $('<div>').append(
+          `<div class="${confTm.stylePrefix}header">${editor.t('styleManager.empty')}</div>`
+      );
+      this.$cn.append(this.$header);
+
+      if (confTm.custom) {
+        tm.__trgCustom({ container: this.$cn2.get(0) });
+      } else {
+        this.$cn2.append(`<div class="trail-header-box" id="trail-header-box-id">${em.t('traitManager.headerTitle')}</div>`);
+        this.$cn2.append(`<div class="${pfx}traits-label">${em.t('traitManager.label')}</div>`);
+        this.$cn2.append(tm.render());
+      }
+
+      var panels = editor.Panels;
+
+      if (!panels.getPanel('views-container')) {
+        // @ts-ignore
+        panelC = panels.addPanel({ id: 'views-container' });
+      } else {
+        panelC = panels.getPanel('views-container');
+      }
+
+      panelC?.set('appendContent', this.$cn.get(0)).trigger('change:appendContent');
+
+      this.target = editor.getModel();
+      this.listenTo(this.target, 'component:toggled', this.toggleTm);
+    }
+
     if (!this.$cnt) {
       const config = editor.getConfig();
       const { Panels, DeviceManager, SelectorManager, StyleManager } = editor;
@@ -37,9 +79,9 @@ export default {
       // Style Manager
       this.sm = StyleManager;
       const smConfig = StyleManager.getConfig();
-      const pfx = smConfig.stylePrefix;
-      this.$header = $(`<div class="${pfx}header">${editor.t('styleManager.empty')}</div>`);
-      $cnt.append(this.$header);
+      // const pfx = smConfig.stylePrefix;
+      // this.$header = $(`<div class="${pfx}header">${editor.t('styleManager.empty')}</div>`);
+      // $cnt.append(this.$header);
 
       if (smConfig.custom) {
         StyleManager.__trgCustom({ container: $cntSm.get(0) });
@@ -77,10 +119,22 @@ export default {
       $cntInner?.hide();
       $header?.show();
     }
+
+    // trail
+    if (this.target.getSelectedAll().length === 1) {
+      this.$cn2.show();
+      this.$header.hide();
+    } else {
+      this.$cn2.hide();
+      this.$header.show();
+    }
   },
 
   stop() {
     this.$cntInner?.hide();
     this.$header?.hide();
+    // trail
+    this.$cn2 && this.$cn2.hide();
+    this.$header && this.$header.hide();
   },
 } as CommandObject<{}, { [k: string]: any }>;

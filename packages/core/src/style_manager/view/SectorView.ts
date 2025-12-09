@@ -43,11 +43,42 @@ export default class SectorView extends View<Sector> {
     };
   }
 
+  isCustomVideo(){
+    return this.model.get('name') == 'Video'
+  }
+
+  // 自定义表单
+  isCustomForm(){
+    return this.model.get('name') == 'Form'
+  }
   updateOpen() {
     const { $el, model, pfx } = this;
     const isOpen = model.isOpen();
     $el[isOpen ? 'addClass' : 'removeClass'](`${pfx}open`);
     this.getPropertiesEl().style.display = isOpen ? '' : 'none';
+
+    if(this.isCustomVideo()){
+      try{
+        // @ts-ignore
+        this.config?.em?._config?.videoManager?.updateOpen?.({
+          isOpen: isOpen
+        })
+      }
+      catch (e) {
+        console.error(e)
+      }
+    }
+    else if(this.isCustomForm()){
+      try{
+        // @ts-ignore
+        this.config?.em?._config?.formManager?.updateOpen?.({
+          isOpen: isOpen
+        })
+      }
+      catch (e) {
+        console.error(e)
+      }
+    }
   }
 
   updateVisibility() {
@@ -65,13 +96,53 @@ export default class SectorView extends View<Sector> {
   }
 
   renderProperties() {
-    const { model, config } = this;
+    const { model, config, pfx } = this;
     const objs = model.get('properties');
 
-    if (objs) {
-      // @ts-ignore
-      const view = new PropertiesView({ collection: objs, config });
-      this.$el.append(view.render().el);
+    if(objs) {
+      if(this.isCustomVideo()){
+        try{
+          const virtualDom=document.createElement('div')
+          virtualDom.classList.add(`${pfx}properties`)
+          const childEd=document.createElement('div')
+          childEd.classList.add('video-placeholder-child')
+          childEd.setAttribute('tag','video-placeholder-child')
+          virtualDom.append(childEd)
+          this.$el.append(virtualDom)
+          // @ts-ignore
+          this.config?.em?._config?.videoManager?.renderProperties?.({
+            childEl: childEd,
+            parentEl: virtualDom,
+          })
+        }
+        catch (e) {
+          console.error(e)
+        }
+      }
+      else if(this.isCustomForm()){
+        try{
+          const virtualDom=document.createElement('div')
+          virtualDom.classList.add(`${pfx}properties`)
+          const childEd=document.createElement('div')
+          childEd.classList.add('form-placeholder-child')
+          childEd.setAttribute('tag','form-placeholder-child')
+          virtualDom.append(childEd)
+          this.$el.append(virtualDom)
+          // @ts-ignore
+          this.config?.em?._config?.formManager?.renderProperties?.({
+            childEl: childEd,
+            parentEl: virtualDom,
+          })
+        }
+        catch (e) {
+          console.error(e)
+        }
+      }
+      else{
+        const view = new PropertiesView({ collection: objs, config });
+        this.$el.append(view.render().el);
+      }
+
     }
   }
 

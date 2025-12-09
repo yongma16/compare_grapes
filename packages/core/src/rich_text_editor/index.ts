@@ -108,6 +108,9 @@ export default class RichTextEditorModule extends Module<RichTextEditorConfig & 
   }
 
   destroy() {
+    console.log('destory rte')
+    // @ts-ignore hidden
+    this?.em?._config?.richProps?.hideToolbarAction?.()
     this.globalRte?.destroy();
     this.customRte?.destroy?.();
     this.model.stopListening().clear({ silent: true });
@@ -340,8 +343,14 @@ export default class RichTextEditorModule extends Module<RichTextEditorConfig & 
     this.lastEl = view.el;
     const { customRte, em, events } = this;
     const el = view.getChildrenContainer();
+    // @ts-ignore 隐藏原有的 toolbar
+    if(this?.em?._config?.richProps?.isHiddenToobar){
+      this.toolbar.style.display = 'none';
+    }
+    else{
+      this.toolbar.style.display = '';
+    }
 
-    this.toolbar.style.display = '';
     const rteInst = await (customRte ? customRte.enable(el, rte, opts) : this.initRte(el).enable(opts));
 
     if (em) {
@@ -352,6 +361,10 @@ export default class RichTextEditorModule extends Module<RichTextEditorConfig & 
     }
 
     this.model.set({ currentView: view });
+
+    // enableToolbarAction 自定义的编辑状态
+    // @ts-ignore 开关
+    this?.em?._config?.richProps?.enableToolbarAction?.(rteInst)
 
     return rteInst;
   }
@@ -368,6 +381,9 @@ export default class RichTextEditorModule extends Module<RichTextEditorConfig & 
   }
 
   hideToolbar() {
+    // hideToolbarAction 自定义的编辑状态
+    // @ts-ignore
+    this?.em?._config?.richProps?.hideToolbarAction?.()
     const style = this.toolbar.style;
     const size = '-1000px';
     style.top = size;

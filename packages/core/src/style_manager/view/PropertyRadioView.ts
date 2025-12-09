@@ -37,6 +37,20 @@ export default class PropertyRadioView extends PropertySelectView {
       const inputHld = this.el.querySelector(`.${ppfx}field`)!;
       inputHld.innerHTML = `<div class="${ppfx}radio-items">${optionsRes.join('')}</div>`;
       this.input = inputHld.firstChild as HTMLInputElement;
+      if(prop==='text-decoration'){
+        try{
+          // 事件绑定
+          this.input?.children[0]?.removeEventListener('click',(e)=> {
+            this.config.em._config?.fontManager?.clearStyleAction?.()
+          })
+          this.input?.children[0]?.addEventListener('click',(e)=> {
+            this.config.em._config?.fontManager?.clearStyleAction?.()
+          })
+        }
+        catch (e) {
+          console.error(e)
+        }
+      }
     }
   }
 

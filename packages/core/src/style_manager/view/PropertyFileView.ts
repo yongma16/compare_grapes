@@ -39,20 +39,38 @@ export default class PropertyFileView extends PropertyView {
     const prvBoxEl = el.querySelector('[data-preview-box]') as HTMLElement;
     const prvEl = el.querySelector('[data-preview]') as HTMLElement;
     prvBoxEl.style.display = !value || value === valueDef ? 'none' : '';
-    prvEl.style.backgroundImage = value || model.getDefaultValue();
+    // prvEl.style.backgroundImage = value || model.getDefaultValue();
+    const getUrl=(url:string)=>{
+      return url&&url.startsWith('http')?`url("${url}")`:url;
+    }
+    prvEl.style.backgroundImage = getUrl(value || model.getDefaultValue());
   }
 
   openAssetManager() {
     const am = this.em?.Assets;
-
-    am?.open({
-      select: (asset, complete) => {
-        const url = isString(asset) ? asset : asset.get('src');
-        this.model.upValue(url, { partial: !complete });
-        complete && am.close();
-      },
-      types: ['image'],
-      accept: 'image/*',
-    });
+    const { model, el } = this;
+    if(model?.attributes?.property==='src'){
+      // 图片组件 (图片或者icon) 待定
+      am?.open({
+        select: (asset, complete) => {
+          const src = isString(asset) ? asset : asset.get('src');
+          this.model.upValue(src, { partial: !complete });
+          complete && am.close();
+        },
+        types: ['image'],
+        accept: 'image/*',
+      });
+    }
+    else{
+      am?.open({
+        select: (asset, complete) => {
+          const url = isString(asset) ? asset : asset.get('src');
+          this.model.upValue(url, { partial: !complete });
+          complete && am.close();
+        },
+        types: ['image'],
+        accept: 'image/*',
+      });
+    }
   }
 }
